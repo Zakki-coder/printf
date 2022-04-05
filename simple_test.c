@@ -199,6 +199,18 @@ void test_print_octal()
 	//If precision larger than width and number then add zeroes to front
 }
 
+
+void test_something()
+{
+	int d = 0;
+	int res, res2;
+
+	res = printf("Lol\n");
+	res2 = ft_printf("Lol\n");
+	printf("correct: %d yours: %d\n", res, res2);	
+
+}
+
 int main(void)
 {
 //	test_get_flags();
@@ -208,9 +220,10 @@ int main(void)
 //	test_get_modifiers();	
 //	how_convers();
 //	test_d_i();
-	test_x();
+//	test_x();
 //	wtf();
 //	test_octal_len();
 //	test_print_octal();
+	test_something();
 	return (0);
 }

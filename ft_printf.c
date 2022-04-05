@@ -6,7 +6,7 @@
 /*   By: jniemine <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/09 17:51:33 by jniemine          #+#    #+#             */
-/*   Updated: 2022/04/05 17:13:41 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/04/05 19:08:59 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,10 @@
 
 int has_prefix(t_fs *f_str);
 
+void putchar_and_count(char c, t_fs *f_str)
+{
+	f_str->return_n += write (1, &c, 1);
+}
 int print_chars(t_fs *f_str)
 {
 	const char **str;
@@ -27,13 +31,12 @@ int print_chars(t_fs *f_str)
 		//TODO test edge cases here
 		if(**str != '%' || (*(*str + 1) != '\0' && **str == '%' && *(*str + 1) == '%') 
 			|| (n > 0 && *(*str - 1) == '%' && **str == '%'))
-			write(1, *str, 1);
+			putchar_and_count(**str, f_str);
 		else
 			return (1);
 		++n;
 		++(*str);
 	}
-	f_str->return_n += n;	//Well this doesnt work
 	if (**str == '\0')
 		return (-1);
 	return (1);
@@ -182,7 +185,7 @@ void handle_width(t_fs *f_str, int len)
 	if (f_str->precision > f_str->width)
 		f_str->width = f_str->precision; //Behaves differently with float
 	if (len == f_str->width && has_prefix(f_str))
-		if (*f_str->str == 'd' || *f_str->str == 'i'
+		if ((*f_str->str == 'd' || *f_str->str == 'i')
 		&& f_str->width < MAX_INT) //At least on linux this is the limit.
 			++f_str->width;
 	if ((!(f & MINUS)) && has_prefix(f_str) && f_str->precision == f_str->width)
@@ -302,7 +305,7 @@ void itodiutoa(t_fs *f_str, long long ll)
 		ft_memset(out, '0', f_str->width);
 	out = not_itoa(out, ull, len, diff); //Make a function to decide which type of number is parsed, d , o or x, malloc protection is in handle_width
 	set_prefix(f_str, out, ll, diff);
-	write(1, out, f_str->width);
+	f_str->return_n += write(1, out, f_str->width);
 	++f_str->str;
 	free(out);
 }
@@ -319,13 +322,18 @@ void print_zeroes(int len)
 }
 
 /* At the moment only used with octal */
-void print_spaces(int len)
+long long print_spaces(int len)
 {
+	unsigned long long ret;
+
+	ret = 0;
 	while (len > 0)
 	{
 		ft_putchar(' ');
 		--len;
+		++ret;
 	}
+	return (ret);
 }
 /* Octa Starts */
 /*Argument type is uint because that was the one which gave correct results on my linux*/
@@ -391,7 +399,7 @@ void right_adjusted_octal(t_fs *fs, unsigned long long ull, int len)
 {
 	if (fs->precision > 0)
 	{
-		print_spaces(fs->width - fs->precision - len);
+		fs->return_n += print_spaces(fs->width - fs->precision - len);
 		if (ull == 0)
 			print_zeroes(fs->precision);
 		else
@@ -400,7 +408,7 @@ void right_adjusted_octal(t_fs *fs, unsigned long long ull, int len)
 	else if (!fs->is_precision)
 	{			
 		if (!(fs->flags & ZERO))
-			print_spaces(fs->width - fs->precision - len);
+			fs->return_n += print_spaces(fs->width - fs->precision - len);
 		if (fs->flags & HASH)
 			print_zeroes(1);
 		if (fs->flags & ZERO)
@@ -408,12 +416,12 @@ void right_adjusted_octal(t_fs *fs, unsigned long long ull, int len)
 	}
 	else if (fs->is_precision)
 	{		
-		print_spaces(fs->width - fs->precision - len);
+		fs->return_n += print_spaces(fs->width - fs->precision - len);
 		if (fs->flags & HASH && ++len)
 			print_zeroes(1);
 	}
 	if (ull > 0 || (ull == 0 && !fs->is_precision && !(fs->flags & HASH)))
-		octal_print(ull);
+		fs->return_n += octal_print(ull);
 }
 /* Number of zeroes = precision - number length. If number is nonzero.
  * If precision is not given and zero flag is on. Number of zeroes = width - number length
@@ -450,8 +458,8 @@ void itootoa(t_fs *f_str, unsigned long long ull)
 			print_zeroes(f_str->precision - len);
 		if (ull > 0)
 			octal_print(ull);
-		if (f_str->width > f_str->precision && f_str->is_precision);
-			print_spaces(f_str->width - f_str->precision);
+		if (f_str->width > f_str->precision && f_str->is_precision)
+			f_str->return_n += print_spaces(f_str->width - f_str->precision);
 	}
 	++f_str->str;
 }
@@ -502,7 +510,7 @@ void hexa_print(t_fs *f_str, unsigned long long ull)
 	ft_bzero(s, 100);
 	if (ull == 0)
 	{
-		ft_putchar('0');
+		putchar_and_count('0', f_str);
 		return ;
 	}
 	if (*f_str->str == 'X')
@@ -525,7 +533,7 @@ void right_adjusted_hexa(t_fs *fs, unsigned long long ull, int len)
 {
 	if (fs->is_precision && fs->precision > 0)
 	{
-		print_spaces(fs->width - fs->precision);
+		fs->return_n += print_spaces(fs->width - fs->precision);
 		if (fs->flags & HASH && ull > 0)
 			put_hexa_prefix(fs);	
 		print_zeroes(fs->precision - len);
@@ -533,7 +541,7 @@ void right_adjusted_hexa(t_fs *fs, unsigned long long ull, int len)
 	else if (!fs->is_precision)
 	{			
 		if (!(fs->flags & ZERO))
-			print_spaces(fs->width - len);
+			fs->return_n += print_spaces(fs->width - len);
 		if (fs->flags & HASH && ull != 0)
 			put_hexa_prefix(fs);
 		if (fs->flags & ZERO)
@@ -541,7 +549,7 @@ void right_adjusted_hexa(t_fs *fs, unsigned long long ull, int len)
 	}
 	else if (fs->is_precision)
 	{		
-		print_spaces(fs->width - fs->precision - len);
+		fs->return_n += print_spaces(fs->width - fs->precision - len);
 		if (fs->flags & HASH && ull > 0)
 			put_hexa_prefix(fs);
 	}
@@ -592,12 +600,12 @@ void itoxa(t_fs *f_str, unsigned long long ull)
 		else if (ull == 0 && precision == 0)
 		{
 			print_zeroes(precision - len);
-			print_spaces(f_str->width - precision - len);
+			f_str->return_n += print_spaces(f_str->width - precision - len);
 		}
 		if (!(ull == 0 && f_str->is_precision && precision == 0))
 			hexa_print(f_str, ull);
 		if (!(ull == 0 && precision == 0))
-			print_spaces(f_str->width - len);
+			f_str->return_n += print_spaces(f_str->width - len);
 	}
 	++f_str->str;
 }
@@ -647,10 +655,9 @@ long long cast_to_modifier(t_fs *f_str, long long ll)
 	return((int)ll);//print_di(f_str, (int)ll);
 }
 	
-/* Never format string or argcs */
+/* Never format string or argcs or return_n */
 void format_fs(t_fs *f_str)
 {
-	f_str->return_n = 0;
 	f_str->flags = 0;
 	f_str->width = 0;
 	f_str->precision = 0;
@@ -707,30 +714,28 @@ void parse_conversion(t_fs *f_str)
 	format_fs(f_str);
 }
 
-void parser(t_fs f_str)
+void parser(t_fs *f_str)
 {
 	const char **str;
-	int *n;
 
-	n = &f_str.return_n;
-	str = &f_str.str;
+	str = &f_str->str;
 	while (**str != '\0')
 	{
 	//Traverse and print fs until %, with print_chars then send to get_flags
-	if(print_chars(&f_str) == -1)
+	if(print_chars(f_str) == -1)
 		return ;
 		while(!is_conversion(**str) && **str != '\0')
 		{
 			++(*str);
-			get_flags(&f_str);
+			get_flags(f_str);
 	//Loop for width(number), precision(.number), length mod(letter) until conversion or \0 is encountered
-			get_width(&f_str);
-			get_precision(&f_str);
-			get_modifiers(&f_str);
+			get_width(f_str);
+			get_precision(f_str);
+			get_modifiers(f_str);
 		}
 		//Print the first conversion out and reset struct
 		if (is_conversion(**str))
-			parse_conversion(&f_str);
+			parse_conversion(f_str);
 	}
 	//If we find \0 before conversion, nothing gets printed int the '%'-'\0' range, is it correcto?
 }
@@ -741,9 +746,10 @@ int	ft_printf(const char *str, ...)
 	t_fs	f_str;
 
 	format_fs(&f_str);
+	f_str.return_n = 0;
 	f_str.str = str;
 	va_start(f_str.argcs, str);
-	parser(f_str);
+	parser(&f_str);
 	va_end(f_str.argcs);
 	return(f_str.return_n);
 }

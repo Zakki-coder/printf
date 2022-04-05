@@ -6,7 +6,7 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/14 15:15:00 by jniemine          #+#    #+#             */
-/*   Updated: 2022/04/04 18:23:28 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/04/05 18:25:25 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ typedef struct s_format_string
 {
 	const char	*str;
 	va_list		argcs;
-	int			return_n;
+	unsigned long long return_n;
 	int			flags;
 	int			width;
 	int			precision;

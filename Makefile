@@ -1,13 +1,16 @@
-NAME = ft_printf
+NAME = libftprintf.a
 
 INC =	-I./		\
 		-I./libft/	\
 	
-SRC =	./main.c	\
+SRC =	./ft_printf.c	\
 		./libft/*.c	\
 
+OBJ =	./*.o
+
 ${NAME}:
-	@gcc -o ${NAME} ${SRC} ${INC}
+	@gcc -c ${SRC} ${INC}
+	@ar -rc ${NAME} ${OBJ}
 
 all: ${NAME}
 
