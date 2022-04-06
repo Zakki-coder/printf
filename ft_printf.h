@@ -6,7 +6,7 @@
 /*   By: jniemine <jniemine@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/14 15:15:00 by jniemine          #+#    #+#             */
-/*   Updated: 2022/04/05 18:25:25 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/04/06 18:24:50 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,7 @@ typedef struct s_format_string
 	int			modifier;
 	int			conversion;
 	int			neg;
+	int			percent_flag;
 }				t_fs;
 
 void	print_octal(t_fs *f_str, unsigned long long ull);

@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <wait.h>
+//#include <wait.h>
 #include <limits.h>
 #include <time.h>
 
@@ -786,10 +786,10 @@ void test_length_mod_l_and_L_with_float(void)
 void test_print_with_percent(int print_to_console)
 {	
 	char *test_name = "test_print_with_percent";
-	int buf_size = 500;
+	int buf_size = 5000;
 	char res[buf_size];
 	char res2[buf_size];
-	char *inputs[10];
+	char *inputs[100];
 	int i = 0;
 	int p[2], p2[2], stdout_bk;
 
@@ -800,8 +800,10 @@ void test_print_with_percent(int print_to_console)
 	stdout_bk = dup(fileno(stdout));
 	dup2(p[1], fileno(stdout)); 
 	inputs[i++] = "What happens here %%d or here %d\n";
+	inputs[i++] = "%%\n";
 	i = 0;
 	printf(inputs[i++], 42, 42); 
+	printf(inputs[i++]); 
 	fflush(stdout);
 	fflush(stdout);
 	close(p[1]);
@@ -810,9 +812,8 @@ void test_print_with_percent(int print_to_console)
 	dup2(p2[1], fileno(stdout)); 
 	
 	i = 0;
-	inputs[i++] = "What happens here %%d or here %d\n";
-	i = 0;
-	printf(inputs[i++], 42, 42); 
+	ft_printf(inputs[i++], 42, 42); 
+	ft_printf(inputs[i++]); 
 	
 	fflush(stdout);
 	close(p2[1]);
@@ -1685,7 +1686,7 @@ void test_overflow()
 }
 
 // not needed when using generate_test_runner.rb
-int main(int argc, char *args) {
+int main(int argc, char **args) {
 //    UNITY_BEGIN();
 //	usage(argc, args);
 //    RUN_TEST(test_double_percent_sign);
@@ -1701,7 +1702,7 @@ int main(int argc, char *args) {
 //	test_length_mod_l();
 //	test_length_mod_ll();
 //	test_length_mod_l_and_L_with_float();
-//	test_print_with_percent(0);
+	test_print_with_percent(0);
 //	test_some_edges();
 //	test_d_and_i();
 //	test_unsigned_conversion_with_char();
@@ -1711,7 +1712,7 @@ int main(int argc, char *args) {
 //	test_unsigned_conversion_with_long_long();
 //	test_unsigned_conversion_with_random_stuff();
 //	test_octal();
-	test_hexa();
+//	test_hexa();
 
 //	test_overflow();
 	return (0);

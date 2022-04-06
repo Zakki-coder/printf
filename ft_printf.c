@@ -6,7 +6,7 @@
 /*   By: jniemine <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/09 17:51:33 by jniemine          #+#    #+#             */
-/*   Updated: 2022/04/05 19:08:59 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/04/06 20:16:23 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,35 @@ void putchar_and_count(char c, t_fs *f_str)
 {
 	f_str->return_n += write (1, &c, 1);
 }
+
+void putchar_n(char c, unsigned long long n, t_fs *f_str)
+{
+	int i;
+
+	i = 0;
+	while (i < n)
+	{
+		f_str->return_n += write(1, &c, 1);
+		++i;
+	}
+}
+
+void multi_percent_handler(const char **str, t_fs *f_str)
+{
+	int n;
+
+	n = 0;
+	while (**str == '%' && **str != '\0')
+	{
+		++(*str);
+		++n;
+	}
+	putchar_n('%', n / 2, f_str);
+	if (n % 2 != 0)
+		--(*str);
+}
+		
+/* Print util % is ecountered */
 int print_chars(t_fs *f_str)
 {
 	const char **str;
@@ -28,13 +57,15 @@ int print_chars(t_fs *f_str)
 	str = &f_str->str;
 	while(**str != '\0')
 	{
-		//TODO test edge cases here
-		if(**str != '%' || (*(*str + 1) != '\0' && **str == '%' && *(*str + 1) == '%') 
-			|| (n > 0 && *(*str - 1) == '%' && **str == '%'))
-			putchar_and_count(**str, f_str);
-		else
+		//Just make if for %% and call percent handler
+		if (**str == '%' && *(*str + 1) == '%')
+		{
+			multi_percent_handler(str, f_str);
+			continue ;
+		}
+		if (**str == '%' && *(*str + 1) != '%')
 			return (1);
-		++n;
+		putchar_and_count(**str, f_str);
 		++(*str);
 	}
 	if (**str == '\0')
@@ -312,17 +343,22 @@ void itodiutoa(t_fs *f_str, long long ll)
 /* itodiutoa ends */
 
 /* At the moment only used with octal */
-void print_zeroes(int len)
+unsigned long long  print_zeroes(int len)
 {
+	unsigned long long ret;
+
+	ret = 0;
 	while (len > 0)
 	{
 		ft_putnbr(0);
 		--len;
+		++ret;
 	}
+	return (ret);
 }
 
 /* At the moment only used with octal */
-long long print_spaces(int len)
+unsigned long long print_spaces(int len)
 {
 	unsigned long long ret;
 
@@ -401,24 +437,24 @@ void right_adjusted_octal(t_fs *fs, unsigned long long ull, int len)
 	{
 		fs->return_n += print_spaces(fs->width - fs->precision - len);
 		if (ull == 0)
-			print_zeroes(fs->precision);
+			fs->return_n += print_zeroes(fs->precision);
 		else
-			print_zeroes(fs->precision - len);
+			fs->return_n += print_zeroes(fs->precision - len);
 	}
 	else if (!fs->is_precision)
 	{			
 		if (!(fs->flags & ZERO))
 			fs->return_n += print_spaces(fs->width - fs->precision - len);
 		if (fs->flags & HASH)
-			print_zeroes(1);
+			fs->return_n += print_zeroes(1);
 		if (fs->flags & ZERO)
-			print_zeroes(fs->width - len);
+			fs->return_n += print_zeroes(fs->width - len);
 	}
 	else if (fs->is_precision)
 	{		
 		fs->return_n += print_spaces(fs->width - fs->precision - len);
 		if (fs->flags & HASH && ++len)
-			print_zeroes(1);
+			fs->return_n +=	print_zeroes(1);
 	}
 	if (ull > 0 || (ull == 0 && !fs->is_precision && !(fs->flags & HASH)))
 		fs->return_n += octal_print(ull);
@@ -445,17 +481,17 @@ void itootoa(t_fs *f_str, unsigned long long ull)
 		/* With # prefix with zero, test with zero and 0 precision. */
 		if (f_str->flags & HASH || (ull == 0 && !(f_str->flags & HASH)
 			&& !(f_str->is_precision && f_str->precision == 0)))
-			print_zeroes(1);
+			f_str->return_n += print_zeroes(1);
 		if (len > f_str->precision)
 			f_str->precision = len;
 		if (ull > 0)
 		{
 			if (f_str->flags & HASH)
 				++len;
-			print_zeroes(f_str->precision - len);
+			f_str->return_n += print_zeroes(f_str->precision - len);
 		}
 		else if (ull == 0 && f_str->precision > 0)
-			print_zeroes(f_str->precision - len);
+			f_str->return_n += print_zeroes(f_str->precision - len);
 		if (ull > 0)
 			octal_print(ull);
 		if (f_str->width > f_str->precision && f_str->is_precision)
@@ -536,7 +572,7 @@ void right_adjusted_hexa(t_fs *fs, unsigned long long ull, int len)
 		fs->return_n += print_spaces(fs->width - fs->precision);
 		if (fs->flags & HASH && ull > 0)
 			put_hexa_prefix(fs);	
-		print_zeroes(fs->precision - len);
+		fs->return_n += print_zeroes(fs->precision - len);
 	}
 	else if (!fs->is_precision)
 	{			
@@ -545,7 +581,7 @@ void right_adjusted_hexa(t_fs *fs, unsigned long long ull, int len)
 		if (fs->flags & HASH && ull != 0)
 			put_hexa_prefix(fs);
 		if (fs->flags & ZERO)
-			print_zeroes(fs->width - len);
+			fs->return_n += print_zeroes(fs->width - len);
 	}
 	else if (fs->is_precision)
 	{		
@@ -599,7 +635,7 @@ void itoxa(t_fs *f_str, unsigned long long ull)
 			put_hexa_prefix(f_str);
 		else if (ull == 0 && precision == 0)
 		{
-			print_zeroes(precision - len);
+			f_str->return_n += print_zeroes(precision - len);
 			f_str->return_n += print_spaces(f_str->width - precision - len);
 		}
 		if (!(ull == 0 && f_str->is_precision && precision == 0))
@@ -665,6 +701,7 @@ void format_fs(t_fs *f_str)
 	f_str->modifier = 0;
 	f_str->conversion = 0;
 	f_str->neg = 0;
+	f_str->percent_flag = 0;
 }
 
 unsigned long long get_argument_u(t_fs *f_str)
@@ -684,6 +721,30 @@ unsigned long long get_argument_u(t_fs *f_str)
 	return (arg);
 }
 
+void left_adjusted_percent(t_fs *f_str)
+{
+	putchar_and_count('%', f_str);	
+	f_str->return_n += print_spaces(f_str->width - 1);
+}
+	
+void right_adjusted_percent(t_fs *f_str)
+{
+	if (f_str->flags & ZERO)
+		f_str->return_n += print_zeroes(f_str->width - 1);
+	else
+		f_str->return_n += print_spaces(f_str->width - 1);
+	putchar_and_count('%', f_str);	
+}
+
+void put_percent(t_fs *f_str)
+{
+	if (f_str->flags & MINUS)
+		left_adjusted_percent(f_str);
+	else
+		right_adjusted_percent(f_str);
+	++f_str->str;
+}
+
 void parse_conversion(t_fs *f_str)
 {
 	long double			ld;
@@ -693,7 +754,7 @@ void parse_conversion(t_fs *f_str)
 	//make a function which gets the argument from stack
 	//Conver the value to octal-, hexa-, integer- or float string
 	//One function to return long long and one to return long double
-	if (*f_str->str != 'f')
+	if (*f_str->str != 'f' && *f_str->str != '%')
 	{
 		if (*f_str->str != 'd' && *f_str->str != 'i')
 		{
@@ -709,8 +770,8 @@ void parse_conversion(t_fs *f_str)
 		}
 
 	}
-	else
-		;
+	else if (*f_str->str == '%')
+		put_percent(f_str);
 	format_fs(f_str);
 }
 
@@ -732,9 +793,11 @@ void parser(t_fs *f_str)
 			get_width(f_str);
 			get_precision(f_str);
 			get_modifiers(f_str);
+			if (**str == '%')
+				break;
 		}
 		//Print the first conversion out and reset struct
-		if (is_conversion(**str))
+		if (is_conversion(**str) || **str == '%')
 			parse_conversion(f_str);
 	}
 	//If we find \0 before conversion, nothing gets printed int the '%'-'\0' range, is it correcto?

@@ -200,17 +200,58 @@ void test_print_octal()
 }
 
 
-void test_something()
+void test_percent()
 {
 	int d = 0;
 	int res, res2;
 
-	res = printf("Lol\n");
-	res2 = ft_printf("Lol\n");
+	res = printf("%%%%%%\n");
+	res2 = ft_printf("%%%%%%\n");
 	printf("correct: %d yours: %d\n", res, res2);	
-
+	res = printf("%%\n");
+	res2 = ft_printf("%%\n");
+	printf("correct: %d yours: %d\n", res, res2);	
+	res = printf("%%%5d\n", 3);
+	res2 = ft_printf("%%%5d\n", 3);
+	printf("correct: %d yours: %d\n", res, res2);	
 }
 
+void test_interesting()
+{
+	int res, res2;
+	//width overrides precision
+	res =	printf("|%05%%7.10%|\n");
+	res2=	ft_printf("|%05%%7.10%|\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	res =	printf("|%-05%%+7.10%|\n");
+	res2=	ft_printf("|%-05%%+7.10%|\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	res =	printf("|%-05.10%|\n");
+	res2=	ft_printf("|%-05.10%|\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	res =	printf("|%-.8%|\n");
+	res2=	ft_printf("|%-.8%|\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	res =	printf("|%8%|\n");
+	res2=	ft_printf("|%8%|\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	res =	printf("|%08%|\n");
+	res2=	ft_printf("|%08%|\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	res =	printf("|%08.3%|\n");
+	res2=	ft_printf("|%08.3%|\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	res =	printf("|%0.3%|\n");
+	res2=	ft_printf("|%0.3%|\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	res =	printf("%5%\n");
+	res2 =	ft_printf("%5%\n");
+	printf("Expected: %d Yours: %d\n", res, res2);
+	printf("%   %\n", "test");
+	ft_printf("%   %\n", "test");
+}
+
+/* Anything excpet float with value 0 and precisionn zero prints no digits */
 int main(void)
 {
 //	test_get_flags();
@@ -224,6 +265,8 @@ int main(void)
 //	wtf();
 //	test_octal_len();
 //	test_print_octal();
-	test_something();
+/*	copy tests from percent and interesting to automatic test file NOW */
+	test_percent();
+	test_interesting();
 	return (0);
 }
