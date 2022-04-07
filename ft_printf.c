@@ -6,7 +6,7 @@
 /*   By: jniemine <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/03/09 17:51:33 by jniemine          #+#    #+#             */
-/*   Updated: 2022/04/06 20:16:23 by jniemine         ###   ########.fr       */
+/*   Updated: 2022/04/07 17:10:10 by jniemine         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,20 @@
 #include "ft_printf.h"
 
 int has_prefix(t_fs *f_str);
+
+unsigned long long print_spaces(int len)
+{
+	unsigned long long ret;
+
+	ret = 0;
+	while (len > 0)
+	{
+		ft_putchar(' ');
+		--len;
+		++ret;
+	}
+	return (ret);
+}
 
 void putchar_and_count(char c, t_fs *f_str)
 {
@@ -133,7 +147,7 @@ void get_width(t_fs *f_str)
 	}
 }
 
-/* precision has been initialized to -1 and changes to at least to zero if . is found */
+/* precision has been initialized to -1 and changes to at least to zero if . is found *precision */
 void get_precision(t_fs *f_str)
 {
 	int n;
@@ -270,10 +284,10 @@ void set_prefix(t_fs *f_str, char *out, long long ll, int diff)
 		prefix = ' ';
 	else
 		return ;
-	if ((f & MINUS) || (f & ZERO) || f_str->is_precision)
+	if ((f & MINUS) || (f & ZERO))
 		*out = prefix;	
 	else
-		*(out + diff - 1) = prefix;
+		*(out + f_str->width - f_str->precision - 1) = prefix;
 }
 
 char *not_itoa(char *out, unsigned long long nb, int len, int diff)
@@ -307,6 +321,19 @@ unsigned long long convert_from_negativity(t_fs *f_str, long long ll)
 	ull = ll;
 	return (ull);
 }
+
+/* Return 1 if the number is 0 and precision is 0 */
+int zero_case(t_fs *f_str, unsigned long long ull)
+{
+	if (ull == 0 && f_str->is_precision && f_str->precision == 0)
+	{
+		f_str->return_n += print_spaces(f_str->width);	
+		++f_str->str;
+		return (1);
+	}
+	return (0);
+}
+
 //Precision guarantees the number of digits, so if there is precision and prefix, then +1 width
 void itodiutoa(t_fs *f_str, long long ll)
 {
@@ -314,10 +341,14 @@ void itodiutoa(t_fs *f_str, long long ll)
 	int		len;
 	int		diff;
 	unsigned long long ull;
-			
+	/* Zero case hasnt been tested */	
+	if (zero_case(f_str, ll))
+		return ;
 	ull = convert_from_negativity(f_str, ll);
 	len = nb_length(ull);
 	handle_width(f_str, len); //Remember to free
+	if (f_str->precision < len)
+		f_str->precision = len;
 	diff = f_str->width - len;
 	out = (char *)ft_memalloc(sizeof(*out) * f_str->width);
 	if (out == NULL)
@@ -325,10 +356,15 @@ void itodiutoa(t_fs *f_str, long long ll)
 	ft_memset(out, ' ', f_str->width);
 	if (f_str->flags & MINUS)
 	{
-		if (ll < 0 || f_str->flags & PLUS || f_str->flags & SPACE)
+		if  (ll < 0 || f_str->flags & PLUS || f_str->flags & SPACE)
 			diff = 1;
 		else
 			diff = 0;
+		if (f_str->precision - len > 0)
+		{
+			ft_memset(out + diff, '0', f_str->precision - len);
+			diff += f_str->precision - len;
+		}
 	}
 	if (!(f_str->flags & MINUS) && f_str->is_precision)
 		ft_memset(out + (f_str->width - f_str->precision), '0', f_str->precision);
@@ -357,27 +393,16 @@ unsigned long long  print_zeroes(int len)
 	return (ret);
 }
 
-/* At the moment only used with octal */
-unsigned long long print_spaces(int len)
-{
-	unsigned long long ret;
 
-	ret = 0;
-	while (len > 0)
-	{
-		ft_putchar(' ');
-		--len;
-		++ret;
-	}
-	return (ret);
-}
 /* Octa Starts */
 /*Argument type is uint because that was the one which gave correct results on my linux*/
-unsigned int octal_len(unsigned long long ull)
+unsigned int octal_len(t_fs *f_str, unsigned long long ull)
 {
 	char s[100];
 	int i;
+	int add;
 
+	add = 0;
 	i = 0;
 	ft_bzero(s, 100);
 	if (ull == 0)
@@ -388,10 +413,12 @@ unsigned int octal_len(unsigned long long ull)
 		ull /= 8;
 		++i;
 	}
-	return (ft_strlen(s));
+	if (f_str->flags & HASH)
+		add = 1;
+	return (ft_strlen(s) + add);
 }
 
-void str_reverse(char *s)
+int str_reverse(char *s)
 {
 	int len;
 	int i;
@@ -407,6 +434,7 @@ void str_reverse(char *s)
 		--len;
 	}
 	ft_putstr(temp);
+	return (ft_strlen(temp));
 }
 
 unsigned int octal_print(unsigned long long ull)
@@ -417,7 +445,7 @@ unsigned int octal_print(unsigned long long ull)
 	if (ull == 0)
 	{
 		ft_putnbr(0);
-		return (0);
+		return (1);
 	}
 	i = 0;
 	ft_bzero(s, 100);
@@ -427,8 +455,7 @@ unsigned int octal_print(unsigned long long ull)
 		ull /= 8;
 		++i;
 	}
-	str_reverse(s);
-	return (ft_strlen(s));
+	return (str_reverse(s));
 }
 
 void right_adjusted_octal(t_fs *fs, unsigned long long ull, int len)
@@ -468,34 +495,34 @@ void itootoa(t_fs *f_str, unsigned long long ull)
 	int width;
 	int precision;
 
+	if (zero_case(f_str, ull))
+	{
+		if (f_str->flags & HASH)
+			f_str->return_n += print_zeroes(1);
+		return ;
+	}
 	width = f_str->width;
 	precision = f_str->precision;
 	//Always print zero except when precision is 0 and there is no hash.
 	/* Create number, calculate width > precision > number length, choose largest */
-	len = octal_len(ull);
+	len = octal_len(f_str, ull);
 	handle_width(f_str, len);
 	if (!(f_str->flags & MINUS))
 		right_adjusted_octal(f_str, ull, len);
 	else
 	{
 		/* With # prefix with zero, test with zero and 0 precision. */
-		if (f_str->flags & HASH || (ull == 0 && !(f_str->flags & HASH)
-			&& !(f_str->is_precision && f_str->precision == 0)))
+		if (f_str->flags & HASH)
 			f_str->return_n += print_zeroes(1);
 		if (len > f_str->precision)
 			f_str->precision = len;
 		if (ull > 0)
-		{
-			if (f_str->flags & HASH)
-				++len;
 			f_str->return_n += print_zeroes(f_str->precision - len);
-		}
 		else if (ull == 0 && f_str->precision > 0)
 			f_str->return_n += print_zeroes(f_str->precision - len);
 		if (ull > 0)
-			octal_print(ull);
-		if (f_str->width > f_str->precision && f_str->is_precision)
-			f_str->return_n += print_spaces(f_str->width - f_str->precision);
+			f_str->return_n += octal_print(ull);
+		f_str->return_n += print_spaces(f_str->width - f_str->precision);
 	}
 	++f_str->str;
 }
@@ -530,10 +557,14 @@ void put_hexa_prefix(t_fs *fs)
 	char l_case;
 
 	l_case = *fs->str;
-	if (l_case == 'X')
-		ft_putstr("0X");
-	if (l_case == 'x')
-		ft_putstr("0x");
+	if (l_case == 'X' || l_case == 'x')
+	{
+		if (l_case == 'X')
+			ft_putstr("0X");
+		if (l_case == 'x')
+			ft_putstr("0x");
+		fs->return_n += 2;
+	}
 }
 
 void hexa_print(t_fs *f_str, unsigned long long ull)
@@ -562,24 +593,35 @@ void hexa_print(t_fs *f_str, unsigned long long ull)
 		ull /= 16;
 		++i;
 	}
-	str_reverse(s);
+	f_str->return_n += str_reverse(s);
 }
 /* Dont print prefix if ull == 0 and precision is given*/
+/* Prints too much spaces when hash is given 2 too much to be precise */
 void right_adjusted_hexa(t_fs *fs, unsigned long long ull, int len)
 {
 	if (fs->is_precision && fs->precision > 0)
 	{
-		fs->return_n += print_spaces(fs->width - fs->precision);
+		fs->return_n += print_spaces(fs->width - len);
 		if (fs->flags & HASH && ull > 0)
+		{
 			put_hexa_prefix(fs);	
+			len += 2;
+		}
 		fs->return_n += print_zeroes(fs->precision - len);
 	}
 	else if (!fs->is_precision)
 	{			
 		if (!(fs->flags & ZERO))
+		{
+			if (fs->flags & HASH)
+				len += 2;
 			fs->return_n += print_spaces(fs->width - len);
+		}
 		if (fs->flags & HASH && ull != 0)
+		{
+			len += 2;
 			put_hexa_prefix(fs);
+		}
 		if (fs->flags & ZERO)
 			fs->return_n += print_zeroes(fs->width - len);
 	}
@@ -617,6 +659,8 @@ void itoxa(t_fs *f_str, unsigned long long ull)
 	int width;
 	int precision;
 
+	if (zero_case(f_str, ull))
+		return ;
 	width = f_str->width;
 	//When precision is explicitly zero, this doesnt work FIX IT
 	//Always print zero except when precision is 0 and there is no hash.
@@ -632,16 +676,12 @@ void itoxa(t_fs *f_str, unsigned long long ull)
 		/* With # prefix with zero, test with zero and 0 precision. */
 		/* If precision is larger than len, then add zeroes to front, test all functions */
 		if (f_str->flags & HASH && ull != 0)
-			put_hexa_prefix(f_str);
-		else if (ull == 0 && precision == 0)
 		{
-			f_str->return_n += print_zeroes(precision - len);
-			f_str->return_n += print_spaces(f_str->width - precision - len);
+			put_hexa_prefix(f_str);
+			len += 2;
 		}
-		if (!(ull == 0 && f_str->is_precision && precision == 0))
-			hexa_print(f_str, ull);
-		if (!(ull == 0 && precision == 0))
-			f_str->return_n += print_spaces(f_str->width - len);
+		hexa_print(f_str, ull);
+		f_str->return_n += print_spaces(f_str->width - len);
 	}
 	++f_str->str;
 }
