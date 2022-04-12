@@ -4,6 +4,8 @@
 #include <limits.h>
 #include <float.h>
 
+#include <stdio.h> // DELTEE
+
 void print_bit(long long n)
 {
 	int largest = 0;
@@ -274,6 +276,19 @@ void test_interesting()
 
 }
 
+void test_rounder()
+{
+	unsigned int res;
+	double input;
+
+	input = 0.125;
+	ft_printf("Yours:    %.2f\n", input);
+	printf("Expected: %.2f\n", input);
+	input = 0.75;
+	ft_printf("Yours:    %.1f\n", input);
+	printf("Expected: %.1f\n", input);
+}
+
 /* Anything excpet float with value 0 and precisionn zero prints no digits */
 int main(void)
 {
@@ -290,6 +305,7 @@ int main(void)
 //	test_print_octal();
 /*	copy tests from percent and interesting to automatic test file NOW */
 //	test_percent();
-	test_interesting();
+//	test_interesting();
+	test_rounder();
 	return (0);
 }

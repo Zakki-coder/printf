@@ -10,7 +10,6 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdio.h>	//DELTE
 #include "ft_printf.h"
 
 int has_prefix(t_fs *f_str);
@@ -113,7 +112,7 @@ void get_flags(t_fs *f_str)
 
 int is_conversion(char c)
 {
-	return (c == 'c' || c == 's' || c == 'p' || c == 'd' || c == 'i'
+	return (c == 'f' || c == 'c' || c == 's' || c == 'p' || c == 'd' || c == 'i'
 			|| c == 'o' || c == 'u' || c == 'x' || c == 'X');
 }
 
@@ -207,9 +206,7 @@ long long get_argument(t_fs *f_str)
 	long long arg;
 
 	m = f_str->modifier;
-	if (m & LDBL)
-		arg = va_arg(f_str->argcs, long double);//call get_ldbl, which gets the value How the original does it, is there SEGFAULT here?
-	else if (m & LLONG)
+	if (m & LLONG)
 		arg = va_arg(f_str->argcs, long long);
 	else if (m & LONG)
 		arg = va_arg(f_str->argcs, long);
@@ -812,6 +809,8 @@ void parse_conversion(t_fs *f_str)
 	}
 	else if (*f_str->str == '%')
 		put_percent(f_str);
+	else
+		float_to_ascii(f_str);
 	format_fs(f_str);
 }
 
