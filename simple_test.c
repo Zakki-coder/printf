@@ -281,12 +281,15 @@ void test_rounder()
 	unsigned int res;
 	double input;
 
-	input = 0.125;
-	ft_printf("Yours:    %.2f\n", input);
-	printf("Expected: %.2f\n", input);
-	input = 0.75;
-	ft_printf("Yours:    %.1f\n", input);
-	printf("Expected: %.1f\n", input);
+//	input = 0.125;
+//	ft_printf("Yours:    %.2f\n", input);
+//	printf("Expected: %.2f\n", input);
+//	input = 0.75;
+//	ft_printf("Yours:    %.1f\n", input);
+//	printf("Expected: %.1f\n", input);
+	input = 0.1234;
+	ft_printf("Yours:    %.3f\n", input);
+	printf("Expected: %.3f\n", input);
 }
 
 /* Anything excpet float with value 0 and precisionn zero prints no digits */

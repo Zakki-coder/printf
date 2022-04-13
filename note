@@ -1,8 +1,1 @@
-	/* For x produce output with lowercase, for X with UPPERCASE */
-	/* precision is the minimum numbers of digits to appear, test with zero padd */
-	/* # flag prefixes with 0x or 0X, for NONZERO!!!! */
-	/* 0 flag padds with zeroes on the left */
-	/* - flag left adjustes and overrides 0 flag */
-	/* NO SPACE OR + FLAG */
-	
-	When refracing the code, change all previous functions to upgrade precision like in itoxa. Also consider setting the default precision to 1 and giving up the is_precision flag.`
+	Negative precision goes to default precision 6. Negative width is negative flag and abs width. Remember this when implementating the * test |%.-12|

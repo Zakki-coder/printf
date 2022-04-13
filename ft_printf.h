@@ -49,7 +49,6 @@ typedef struct s_format_string
 
 void float_to_ascii(t_fs *f_str);
 long double divide_one_with_ten_n(int precision); //DEBUGGIN
-void rounder(t_fs *f_str, long double f); //FOR DEBUG
 void	print_octal(t_fs *f_str, unsigned long long ull);
 unsigned int hexa_len(unsigned long long ull); //FOR DEBUG
 void	abs_putnbr(unsigned long long n);		//FOR DEBUG

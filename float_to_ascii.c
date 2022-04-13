@@ -69,24 +69,52 @@ long double divide_five_with_ten_n(int precision)
 long double round_bankers(int precision, long double f, int next_to_last)
 {
     if (next_to_last % 2 == 0)
-        ;/* Just print the amount of precision when even? */
+        ;/* Just cut after precision when even? */
     else
         f += divide_five_with_ten_n(precision) / 10;
     return(f);
 }
 
-void rounder(t_fs *f_str, long double f)
+/* Just cut after precision when rounding down :D */
+long double round_down_float(int precision, long double f)
+{
+    return (f);
+}
+
+/* Maybe should print all integers before coming here */
+void print_whole_part(t_fs *f_str, long double *f)
+{
+    /* whole part isnt guaranteed to fit int ULL so do something else like get rid of fraction and start dividing */
+}
+
+void print_float(t_fs *f_str, long double f)
+{
+    int precision;
+    unsigned long long digit;
+    long double remainder;
+
+    precision = f_str->precision;
+    while (precision >= 0)
+    {
+        digit = f;
+        ft_putnbr(digit);
+        f -= digit;
+        f *= 10;
+        --precision;
+    }
+}
+
+long double rounder(t_fs *f_str, long double f)
 {
     int direction;
     int for_bankers;
 
     direction = rounding_direction(f_str, f, &for_bankers);
     if (direction == 1)
-        round_up_float(f_str->precision, f);
-    if (direction == 0)
-        round_bankers(f_str->precision, f, for_bankers);
-    /* TODO: Round down */
-    /* TODO: Make printer and send the return values to there */
+        return(round_up_float(f_str->precision, f));
+    else if (direction == 0)
+        return(round_bankers(f_str->precision, f, for_bankers));
+    return(round_down_float(f_str->precision, f)); //At this moment does nothing because no need?
 }
 
 void float_to_ascii(t_fs *f_str)
@@ -101,6 +129,6 @@ void float_to_ascii(t_fs *f_str)
     if (1 / f < 0)
         f_str->neg = 1;
     /*check for precision */
-    rounder(f_str, f);
+    print_float(f_str, rounder(f_str, f));
     ++f_str->str;
 }
